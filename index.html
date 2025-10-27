@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" /><link rel="canonical" href="https://OpenSprinkler.github.io/OpenSprinkler-Firmware/" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>OpenSprinkler Documentation</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="custom.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Home";
+        var mkdocs_page_input_path = "index.md";
+        var mkdocs_page_url = "/OpenSprinkler-Firmware/";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> OpenSprinkler Documentation
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Home</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#firmware-compilation-instructions">Firmware Compilation Instructions</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#environment-setup">Environment Setup</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#building-the-firmware">Building the Firmware</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#firmware-update-instructions">Firmware Update Instructions</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#update-steps">Update Steps</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#troubleshooting">Troubleshooting</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#list-of-opensprinkler-firmwares">List of OpenSprinkler Firmwares</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="faq/">FAQ</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Firmware v2.2.1(4)</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="2.2.1/221_4_manual/">User Manual</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="2.2.1/221_4_api/">API Reference</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Archived</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="archive/">Previous Manuals and API docs</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">OpenSprinkler Documentation</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Home</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/OpenSprinkler/OpenSprinkler-Firmware/edit/master/docs/index.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="opensprinkler-firmware-and-documentation">OpenSprinkler Firmware and Documentation</h1>
+<p>This Github repository contains the firmware source code and documentation for OpenSprinkler. For product details, visit <a href="https://opensprinkler.io">https://opensprinkler.com</a>.</p>
+<p>For official firmware release notes, please go to the <a href="https://github.com/OpenSprinkler/OpenSprinkler-Firmware/releases">OpenSprinkler Firmware Releases</a> page on GitHub.</p>
+<hr />
+<h2 id="firmware-compilation-instructions">Firmware Compilation Instructions</h2>
+<h3 id="environment-setup">Environment Setup</h3>
+<ol>
+<li>Download and unzip (or git clone) this (<code>OpenSprinkler-Firmware</code>) repository.</li>
+<li>Install the latest LTS version of Node.js from <a href="https://nodejs.org/">https://nodejs.org/</a> if you don't already have it.</li>
+<li>In your terminal, navigate to the <code>OpenSprinkler-Firmware</code> folder (the source code folder) and run <code>npm install html-minifier-terser</code>.</li>
+<li>Install Visual Studio Code (VS Code) from <a href="https://code.visualstudio.com/">https://code.visualstudio.com/</a>, if you don't already have it.</li>
+<li>Launch VS Code and install the <strong>PlatformIO</strong> extension.</li>
+</ol>
+<h3 id="building-the-firmware">Building the Firmware</h3>
+<ol>
+<li>In VS Code, click <code>File -&gt; Open Folder</code> and select the <code>OpenSprinkler-Firmware</code> folder.</li>
+<li>PlatformIO will recognize the <code>platformio.ini</code> file in that folder, which contains all the libraries and settings needed to compile the firmware.</li>
+<li>Click the <strong>PlatformIO: Build</strong> button (with the checkmark icon ✓) in the blue status bar at the bottom of the screen to build the firmware.</li>
+</ol>
+<hr />
+<h2 id="firmware-update-instructions">Firmware Update Instructions</h2>
+<p>OpenSprinkler firmware supports OTA (over-the-air) updates, allowing you to upload the firmware directly through the web UI.</p>
+<h3 id="update-steps">Update Steps</h3>
+<ol>
+<li><a href="#list-of-opengarage-firmwares">Download a firmware file</a> (e.g. <code>og_x.x.x.bin</code> where <code>x.x.x</code> is the firmware version).</li>
+<li>Before starting, close the Blynk and OpenGarage mobile apps to prevent them from interfering with the update process.</li>
+<li>Open your OpenGarage's homepage, click <code>Firmware Update</code> at the bottom of the page.<ul>
+<li><em>If your OpenGarage is in WiFi AP (Access Point) mode, the update page is available at <code>http://192.168.4.1/update</code>.</em></li>
+</ul>
+</li>
+<li>Select the firmware file your downloaded, enter your device key, and click <code>Submit</code>.</li>
+<li>Wait for the process to finish. If the upload fails, you can try again. If the device hangs, unplug and replug the power, then try again.</li>
+</ol>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<ul>
+<li><strong>Firmware Corruption</strong>: If the firmware upload fails and the device no longer boots, you'll need to re-flash the firmware using a <a href="https://opensprinkler.com/product/usb-programmer/">USB-serial programmer</a>.</li>
+<li><strong>Factory Reset Warning</strong>: Upgrading across major revisions (e.g. from 2.2.0 to 2.2.1) will <strong>erase all setings</strong> due to changes in the flash memory layout. Be sure to export your configurations to a file before proceeding.</li>
+</ul>
+<h3 id="list-of-opensprinkler-firmwares">List of OpenSprinkler Firmwares</h3>
+<p>The release notes of each firmware can be found on <a href="https://github.com/OpenSprinkler/OpenSprinkler-Firmware/releases">github</a>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Download</th>
+<th style="text-align: left;">Documentation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.2.4.bin"><strong><code>1.2.4.bin</code></strong></a></td>
+<td style="text-align: left;">[<a href="1.2.4/manual.md">Manual</a>], [<a href="1.2.4/api.md">API</a>]</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.2.3.bin"><code>1.2.3.bin</code></a></td>
+<td style="text-align: left;"><a href="archive/">Docs</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.2.1.bin"><code>1.2.1.bin</code></a></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.2.0.bin"><code>1.2.0.bin</code></a></td>
+<td style="text-align: left;"><a href="archive/">Archive</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.1.3.bin"><code>1.1.3.bin</code></a></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.1.2.bin"><code>1.1.2.bin</code></a></td>
+<td style="text-align: left;"><a href="archive/">Archive</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.1.1.bin"><code>1.1.1.bin</code></a></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.1.0.bin"><code>1.1.0.bin</code></a></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.0.9.bin"><code>1.0.9.bin</code></a></td>
+<td style="text-align: left;"><a href="archive/">Archive</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.0.8.bin"><code>1.0.8.bin</code></a></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.0.7.bin"><code>1.0.7.bin</code></a></td>
+<td style="text-align: left;"><a href="archive/">Archive</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.0.6.bin"><code>1.0.6.bin</code></a></td>
+<td style="text-align: left;"><a href="archive/">Archive</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.0.5.bin"><code>1.0.5.bin</code></a></td>
+<td style="text-align: left;"><a href="archive/">Archive</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.0.4.bin"><code>1.0.4.bin</code></a></td>
+<td style="text-align: left;"><a href="archive/">Archive</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="assets/bins/og_1.0.3.bin"><code>1.0.3.bin</code></a></td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<hr />
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="faq/" class="btn btn-neutral float-right" title="FAQ">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/OpenSprinkler/OpenSprinkler-Firmware" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+    
+      <span><a href="faq/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.6.1
+Build Date UTC : 2025-10-27 01:08:02.334702+00:00
+-->
