@@ -205,8 +205,8 @@
 <li><code>apdv</code> (Actual PD Voltage), in <a href="#2-get-controller-variables-jc">controller variables</a> (<code>/jc</code>), reports the active PD voltage.</li>
 </ul>
 </li>
-<li><strong>Preemptive Running</strong>: Manual operations can now <strong>preempt</strong> the existing watering queue, allowing them to run immediately. This applies to <a href="#11-manual-station-run-cm"><strong>Manual Station Run</strong></a>, <a href="#17-run-once-program-cr"><strong>Run-Once Program</strong></a>, and <a href="#12-manually-start-a-program-mp"><strong>Manual Program Start</strong></a>.<ul>
-<li>A new parameter <code>pre</code> is available for these commands to insert new zones at the front of the queue instead of adding them to the end.</li>
+<li><strong>Queuing Option for Manual Runs</strong>: Manual actions can now choose whether new zones run immediately or later. Applied to <a href="#11-manual-station-run-cm"><strong>Manual Station Run</strong></a>, <a href="#17-run-once-program-cr"><strong>Run-Once</strong></a>, and <a href="#12-manually-start-a-program-mp"><strong>Manual Program Start</strong></a>.<ul>
+<li>A new parameter <code>qo</code> is added for these commands, allowing a choice between appending zones to the queue, inserting them at the front, or replacing the existing queue.</li>
 </ul>
 </li>
 </ul>
@@ -340,7 +340,11 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>flcrt</code></td>
-<td style="text-align: left;">Flow count: the number of flow-sensor clicks during the last <code>flwrt</code> seconds.</td>
+<td style="text-align: left;">Flow count (windowed): number of flow-sensor clicks during the last <code>flwrt</code> secs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>flcto</code></td>
+<td style="text-align: left;"><span class="hl">Flow count (total): cumulative flow-sensor clicks since power-on (reset on reboot).</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>pq</code></td>
@@ -942,7 +946,7 @@ Only stations with <code>stn_spe bit=1</code> appear.</p>
 <br>Stations 1 and 2 (at indices <code>0</code> and <code>1</code> in the array) are currently open</p>
 <hr />
 <h3 id="11-manual-station-run-cm">11. Manual Station Run <code>/cm</code></h3>
-<p><strong><span class="hl">Usage</span></strong>: <code>http://os-ip/cm?<strong>pw</strong>=xxx&amp;<strong>sid</strong>=xx&amp;<strong>en</strong>=x&amp;<strong>t</strong>=xxx&amp;<strong>ssta</strong>=x&amp;<strong>pre</strong>=x</code></p>
+<p><strong><span class="hl">Usage</span></strong>: <code>http://os-ip/cm?<strong>pw</strong>=xxx&amp;<strong>sid</strong>=xx&amp;<strong>en</strong>=x&amp;<strong>t</strong>=xxx&amp;<strong>ssta</strong>=x&amp;<strong>qo</strong>=x</code></p>
 <table>
 <thead>
 <tr>
@@ -964,8 +968,8 @@ Only stations with <code>stn_spe bit=1</code> appear.</p>
 <td style="text-align: left;">Time in seconds (max: <code>64800</code> i.e. 18 hours). <strong>Required when opening a zone.</strong></td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>pre</code></td>
-<td style="text-align: left;"><span class="hl">Preemptive mode (applies when opening a zone)</span>. <code>0</code>: append to queue (default); <code>1</code>: preempt, i.e. insert ahead of existing queued zones.</td>
+<td style="text-align: left;"><code>qo</code></td>
+<td style="text-align: left;"><span class="hl">Queuing option (applies when opening a zone)</span>. <code>0</code>: append after other zones (default); <code>1</code>: insert ahead of other zones.</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>ssta</code></td>
@@ -982,13 +986,13 @@ Only stations with <code>stn_spe bit=1</code> appear.</p>
 <p><strong>Examples:</strong></p>
 <ul>
 <li><code>os-ip/cm?pw=xxx&amp;sid=0&amp;en=1&amp;t=360</code>: open station 1 for 6 minutes, append to the queue.</li>
-<li><code>os-ip/cm?pw=xxx&amp;sid=3&amp;en=1&amp;t=300&amp;pre=1</code>: open station 4 for 5 minutes, preempt others.</li>
+<li><code>os-ip/cm?pw=xxx&amp;sid=3&amp;en=1&amp;t=300&amp;qo=1</code>: open station 4 for 5 minutes, insert ahead of other zones.</li>
 <li><code>os-ip/cm?pw=xxx&amp;sid=3&amp;en=0</code>: close station 4. Remaining stations in the same sequential group retain their original assigned start times.</li>
 <li><code>os-ip/cm?pw=xxx&amp;sid=3&amp;en=0&amp;ssta=1</code>: close station 4 and shift remaining stations in the same sequential group, so the next station starts immediately. </li>
 </ul>
 <hr />
 <h3 id="12-manually-start-a-program-mp">12. Manually Start a Program <code>/mp</code></h3>
-<p><strong><span class="hl">Usage</span></strong>: <code>http://os-ip/mp?<strong>pw</strong>=xxx&amp;<strong>pid</strong>=xx&amp;<strong>uwt</strong>=x&amp;<strong>pre</strong>=x</code></p>
+<p><strong><span class="hl">Usage</span></strong>: <code>http://os-ip/mp?<strong>pw</strong>=xxx&amp;<strong>pid</strong>=xx&amp;<strong>uwt</strong>=x&amp;<strong>qo</strong>=x</code></p>
 <table>
 <thead>
 <tr>
@@ -1006,18 +1010,18 @@ Only stations with <code>stn_spe bit=1</code> appear.</p>
 <td style="text-align: left;">Use weather (<code>1</code>: apply current watering level; <code>0</code>: run at 100%).</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>pre</code></td>
-<td style="text-align: left;"><span class="hl">Queue behavior.</span> <code>0</code>: append the new program to the end of the queue; <code>1</code>: insert at front (preemptive); <code>2</code>: <strong>replace</strong>, i.e. reset all zones, clear queue, then start the new program. If <code>pre</code> is omitted, the default behavior is <code>2</code> (backward compatible).</td>
+<td style="text-align: left;"><code>qo</code></td>
+<td style="text-align: left;"><span class="hl">Queuing option.</span> <code>0</code>: append the new program to the end of the queue; <code>1</code>: insert at front (preemptive); <code>2</code>: <strong>replace</strong>, i.e. reset all zones, clear queue, then start the new program. If <code>qo</code> is omitted, the default behavior is <code>2</code> (backward compatible).</td>
 </tr>
 </tbody>
 </table>
 <p><br><strong>Note:</strong> Program <strong>name annotations</strong> are honored when starting a program manually. If <code>pid</code> is out of bound, an error is returned.</p>
 <p><strong>Examples:</strong></p>
 <ul>
-<li><code>os-ip/mp?pw=xxx&amp;pid=0&amp;uwt=0</code>: reset all zones, then start program 1 at 100% watering level. As <code>pre</code> is omitted, this behavior is backward compatible with previous firmwares.</li>
-<li><code>os-ip/mp?pw=xxx&amp;pid=1&amp;uwt=1&amp;pre=0</code>: <span class="hl">append program 2 at the end of the queue, using the current watering level.</span></li>
-<li><code>os-ip/mp?pw=xxx&amp;pid=1&amp;uwt=1&amp;pre=1</code>: <span class="hl">insert program 2 at the front of the queue.</span></li>
-<li><code>os-ip/mp?pw=xxx&amp;pid=1&amp;uwt=1&amp;pre=2</code>: <span class="hl">reset all zones, then start program 2 using the current watering level.</span></li>
+<li><code>os-ip/mp?pw=xxx&amp;pid=0&amp;uwt=0</code>: reset all zones, then start program 1 at 100% watering level. As <code>qo</code> is omitted, this behavior is backward compatible with previous firmwares.</li>
+<li><code>os-ip/mp?pw=xxx&amp;pid=1&amp;uwt=1&amp;qo=0</code>: <span class="hl">append program 2 at the end of the queue, using the current watering level.</span></li>
+<li><code>os-ip/mp?pw=xxx&amp;pid=1&amp;uwt=1&amp;qo=1</code>: <span class="hl">insert program 2 at the front of the queue.</span></li>
+<li><code>os-ip/mp?pw=xxx&amp;pid=1&amp;uwt=1&amp;qo=2</code>: <span class="hl">reset all zones, then start program 2 using the current watering level.</span></li>
 </ul>
 <hr />
 <h3 id="13-get-program-data-jp">13. Get Program Data <code>/jp</code></h3>
@@ -1215,7 +1219,7 @@ Only stations with <code>stn_spe bit=1</code> appear.</p>
 </ul>
 <hr />
 <h3 id="17-run-once-program-cr">17. Run-Once Program <code>/cr</code></h3>
-<p><strong><span class="hl">Usage</span></strong>: <code>http://os-ip/cr?<strong>pw</strong>=xxx&amp;<strong>t</strong>=[x,x,...,x]&amp;<strong>cnt</strong>=xxx&amp;<strong>int</strong>=xxx&amp;<strong>uwt</strong>=xxx&amp;<strong>anno</strong>=xxx&amp;<strong>pre</strong>=x</code></p>
+<p><strong><span class="hl">Usage</span></strong>: <code>http://os-ip/cr?<strong>pw</strong>=xxx&amp;<strong>t</strong>=[x,x,...,x]&amp;<strong>cnt</strong>=xxx&amp;<strong>int</strong>=xxx&amp;<strong>uwt</strong>=xxx&amp;<strong>anno</strong>=xxx&amp;<strong>qo</strong>=x</code></p>
 <table>
 <thead>
 <tr>
@@ -1245,17 +1249,17 @@ Only stations with <code>stn_spe bit=1</code> appear.</p>
 <td style="text-align: left;">Program name annotation, in the form of <code>&gt;X</code> where <code>X</code> is an annotation letter. See OpenSprinkler User Manual.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>pre</code></td>
-<td style="text-align: left;"><span class="hl">Queue behavior</span> (same as <code>/mp</code>). <code>0</code>: append to end; <code>1</code>: insert at front; <code>2</code>: <strong>replace</strong> (reset all zones, clear queue, then start). Default is <code>2</code> if <code>pre</code> is omitted.</td>
+<td style="text-align: left;"><code>qo</code></td>
+<td style="text-align: left;"><span class="hl">Queuing option</span> (same as <code>/mp</code>). <code>0</code>: append to end; <code>1</code>: insert at front; <code>2</code>: <strong>replace</strong> (reset all zones, clear queue, then start). Default is <code>2</code> if <code>qo</code> is omitted.</td>
 </tr>
 </tbody>
 </table>
 <p><br><strong>NOTE:</strong> If the program is set to repeat (<code>cnt&gt;0</code> and <code>int&gt;0</code>), the firmware auto-creates a <strong>single-run</strong> program named "Run-once with repeat" (plus <code>anno</code>). This is necessary to support repeats.</p>
 <p><strong>Examples:</strong></p>
 <ul>
-<li><code>os-ip/cr?pw=xxx&amp;t=[60,0,60,0,60,0,60,0]</code>: reset all zones, then start a run-once program that turns on stations 1, 3, 5,7 for <code>1</code> minute each. As <code>pre</code> is omitted, this behavior is compatible with previous firmwares. </li>
-<li><code>os-ip/cr?pw=xxx&amp;t=[60,0,60,0,60,0,60,0]&amp;uwt=1&amp;pre=0</code>: append the run-once program at the end of the queue, using the current watering level.</li>
-<li><code>os-ip/cr?pw=xxx&amp;t=[60,0,60,0,60,0,60,0]&amp;uwt=0&amp;pre=1</code>: insert the run-once program at the front of the queue, using 100% watering level.</li>
+<li><code>os-ip/cr?pw=xxx&amp;t=[60,0,60,0,60,0,60,0]</code>: reset all zones, then start a run-once program that turns on stations 1, 3, 5,7 for <code>1</code> minute each. As <code>qo</code> is omitted, this behavior is compatible with previous firmwares. </li>
+<li><code>os-ip/cr?pw=xxx&amp;t=[60,0,60,0,60,0,60,0]&amp;uwt=1&amp;qo=0</code>: append the run-once program at the end of the queue, using the current watering level.</li>
+<li><code>os-ip/cr?pw=xxx&amp;t=[60,0,60,0,60,0,60,0]&amp;uwt=0&amp;qo=1</code>: insert the run-once program at the front of the queue, using 100% watering level.</li>
 <li><code>os-ip/cr?pw=xxx&amp;t=[60,0,60,0,60,0,60,0]&amp;cnt=3&amp;int=15&amp;anno=&gt;N</code>: similar to the first example above, but also set it to repeat every <code>15</code> minutes for <code>3</code> times. This auto-creates a single-run program, appending the annotation <code>&gt;N</code> to the program name (<code>&gt;N</code> tells the program to run zones in reverse order of zone names).</li>
 </ul>
 <hr />
