@@ -259,7 +259,7 @@ You can use buttons on the controller to bypass the device password. To do so:</
 <li>Press and hold B3 until the controller reboots and completes the reset.</li>
 <li>After reset, the default device password is <code>opendoor</code>. WiFi is in AP mode.</li>
 </ul>
-<p>If your controller is OSPi, see <a href="">OSPi-specific instructions</a>.</p>
+<p>If your controller is OSPi, see <a href="#ospi-specific">OSPi-specific instructions</a>.</p>
 <hr />
 <p><strong>How do I save the configurations?</strong>
 <span class="vsp1"></span></p>
@@ -276,7 +276,7 @@ See <a href="#ui-app-time-and-lcd">Blank page troubleshooting</a> below. In Step
 <h3 id="connectivity">Connectivity</h3>
 <p><strong>WiFi connection issues</strong>
 <span class="vsp1"></span>
-If your OpenSprinkler v3.x fails to join your WiFi network, try these steps:</p>
+If your OpenSprinkler v3.x fails to join or stay connected to your WiFi network, try these steps:</p>
 <ol>
 <li><strong>Check the mode:</strong> Is the controller still in <strong>AP</strong> (Access Point) mode (LCD shows 4 lines, with a fast-blinking dot)? If so, follow WiFi Configuration in the user manual.</li>
 <li><strong>Changed router/SSID/password recently?</strong> Follow the <a href="#reset-and-configurations">Reset WiFi</a> instructions above. </li>
@@ -312,6 +312,10 @@ If your controller can't connect or stay connected via wired Ethernet, try these
 <li><strong>Set an auto-reboot program:</strong> If the controller connects initially but doesn't stay connected, a work-around is to set an auto-reboot program (daily or any regular interval of your choice). See <a href="">Program Annotation</a> in the user manual.</li>
 </ol>
 <p><strong><u>For OSPi</u>:</strong> Networking is managed by RPi. Ensure RPi has adequate power (OSPi supplies up to 500 mA. RPi 3/4/5 may need extra power via USB, otherwise network may be unstable).</p>
+<hr />
+<p><strong>I can access the controller on my local network, but not when I am away.</strong>
+<span class="vsp1"></span>
+Remote access requires using an <strong>OpenThings Cloud (OTC) token</strong>. To check OTC status, from the homepage, swipe left to right to open the side menu, tap <strong>System Diagnostics</strong>. Make sure OTC status is <strong>Connected</strong>. In the OpenSprinkler mobile app, use the OTC token (instead of the controller's IP address) for remote access.</p>
 <hr />
 <h3 id="ui-app-time-and-lcd">UI, App, Time, and LCD</h3>
 <p><strong>Blank page when opening the controller's homepage</strong></p>
@@ -372,6 +376,27 @@ OpenSprinkler sets time automatically from two data sources: <strong>your locati
 </li>
 </ol>
 <p><strong><u>For OSPi</u>:</strong> only Steps 1 &amp; 2 apply, as NTP is managed by Raspbian, not by OpenSprinkler firmware.</p>
+<hr />
+<p><strong>My zones run at the wrong time.</strong>
+<span class="vsp1"></span>
+Refer to the steps above to verify the controller's time is correct.</p>
+<hr />
+<p><strong>A zone runs even though Rain Delay or Rain Sensor is active.</strong>
+<span class="vsp1"></span>
+This is usually caused by that zone being set to <code>Ignore Rain</code> or <code>Ignore Sensor</code>. These attributes can be found by clicking the ⚙️ icon next to the zone to open its attribute dialog. </p>
+<hr />
+<p><strong>My program didn't run as scheduled.</strong></p>
+<ul>
+<li>Check if the program's <strong>Enabled</strong> flag is on.</li>
+<li>Check if the controller's <strong>time is correct</strong>.</li>
+<li>Check for any active <strong>Rain Delay</strong> or <strong>Rain Sensor</strong>.</li>
+<li>If the program's <strong>Use Weather</strong> flag is on, check if the current <strong>Watering Level</strong> is 0%, or there is any active <strong>Watering Restriction</strong>.</li>
+<li><strong>Enable a notification method</strong> (Email, MQTT, or IFTTT) and turn on the <strong>Program Start</strong> event - you will be alerted when a program is scheduled but skipped due to 0% Watering Level or active Watering Restriction. </li>
+</ul>
+<hr />
+<p><strong>How do I verify the Weather Adjustment is working?</strong>
+<span class="vsp1"></span>
+From the homepage, swipe left to right to open the side menu, tap <strong>System Diagnostics</strong>. It shows <strong>Weather Service Details</strong> including error message, if any.</p>
 <hr />
 <p><strong>How do I save log data as a spreadsheet?</strong>
 <span class="vsp1"></span>
