@@ -325,7 +325,7 @@
 </ul>
 </li>
 </ul>
-<p>For additional details on specific sensors (rain/soil/flow), refer to <a href="">Section ?</a> of this manual.</p>
+<p>For additional details on specific sensors (rain/soil/flow), refer to <a href="#sensor-setup">Sensor Setup</a>.</p>
 <hr />
 <h4 id="step-3-zone-expanders-optional">Step 3: Zone Expanders (Optional)</h4>
 <div class="admonition warning">
@@ -367,7 +367,7 @@
 </ul>
 </li>
 </ul>
-<p><strong><u>Select Number of Zones</u>:</strong> The firmware automatically detects the highest expander index, but you still <strong>must manually set the total number of zones</strong> in software settings. You may enable more zones than physically available, to use them as <strong>Virtual Zones</strong> (Remote/HTTP(S)/RF). See <a href="">Section ?</a>).</p>
+<p><strong><u>Select Number of Zones</u>:</strong> The firmware automatically detects the highest expander index, but you still <strong>must manually set the total number of zones</strong> in software settings. You may enable more zones than physically available, to use them as <strong>Virtual Zones</strong> (Remote/HTTP(S)/RF). See <a href="#station-cards">Station Types</a>.</p>
 <hr />
 <h4 id="step-4-setting-up-wifi-ethernet">Step 4: Setting Up WiFi / Ethernet</h4>
 <p><strong>WiFi (OpenSprinkler v3 all versions)</strong></p>
@@ -538,9 +538,9 @@
 <hr />
 <p><strong>Remote Access (via OTC)</strong></p>
 <ul>
-<li>To access the controller remotely, first configure an <strong>OpenThings Cloud (OTC) token</strong> (<a href="">Section ?</a>).</li>
+<li>To access the controller remotely, first configure an <a href="#integration"><strong>OpenThings Cloud (OTC) token</strong></a>.</li>
 <li>In the OpenSprinkler mobile app, choose <strong>Manually Add Device</strong> and paste the <strong>OTC token</strong> instead of an IP.</li>
-<li>To access it remotely using a web browser, visit <code>cloud.openthings.io/forward/v1/token</code> where <code>token</code> is the OTC token (<a href="">Section ?</a>). </li>
+<li>To access it remotely using a web browser, visit <code>cloud.openthings.io/forward/v1/token</code> where <code>token</code> is the <a href="#integration">OTC token</a>. </li>
 <li>Remote access via OTC does <strong>NOT</strong> need port forwarding on your router.</li>
 </ul>
 <hr class="double">
@@ -563,7 +563,7 @@
 <li><strong>Export/Import Configuration:</strong> Save or restore all settings and programs. Use this before firmware upgrades or factory resets.</li>
 <li><strong>About:</strong> Shows app version, firmware version, and hardware version.</li>
 <li><strong>Localization:</strong> Change the display language.</li>
-<li><strong>OpenSprinkler.com Login:</strong> (Optional) Log in with your <a href="https://opensprinkler.com">OpenSprinkler.com</a> account credentials to enable <strong>cloud-synced features</strong> such as station photos, notes, site configurations. (See <a href="">Section ?</a>)</li>
+<li><strong>OpenSprinkler.com Login:</strong> (Optional) Log in with your <a href="https://opensprinkler.com">OpenSprinkler.com</a> account credentials to enable <a href="#cloud-synced-features"><strong>cloud-synced features</strong></a> such as station photos, notes, site configurations.</li>
 <li><strong>Disable Operation:</strong> Disable zone operations. Use it when the system will be idle for an extended period.</li>
 <li><strong>Change Password:</strong> Change the device password.</li>
 <li><strong>Reboot OpenSprinkler:</strong> Perform a software reboot.</li>
@@ -591,10 +591,10 @@
 <p><strong>Basic Tab:</strong></p>
 <ul>
 <li><strong>Station Name:</strong> A custom name (up to 32 letters).<br>
-<strong>Annotation:</strong> If a flow sensor is enabled (<a href="">Section 5</a>) and the last 5 letters represent a numerical value, a <strong>Flow Alert</strong> notification will trigger when the flow rate exceeds this value after the zone finishes. Example: station name is <strong>Front Yard 1.357</strong>, a flow alert will trigger if the flow rate <code>&gt;1.357</code> after the zone finishes.</li>
+<strong>Annotation:</strong> If a flow sensor is enabled (see <a href="#sensor-setup">Sensor Setup</a>) and the last 5 letters represent a numerical value, a <strong>Flow Alert</strong> notification will trigger when the flow rate exceeds this value after the zone finishes. Example: station name is <strong>Front Yard 1.357</strong>, a flow alert will trigger if the flow rate <code>&gt;1.357</code> after the zone finishes.</li>
 <li><strong>Use Masters:</strong> When enabled, the associated Master zone(s), if defined, will activate whenever this zone runs.</li>
 <li><strong>Ignore Rain/Sensor1/Sensor2:</strong> When enabled, the zone will bypass manual rain delay or sensor(s). Unchecked by default.</li>
-<li><strong>Disable:</strong> Disable and hide this zone. To unhide, use the <a href="">Footer Menu</a>.</li>
+<li><strong>Disable:</strong> Disable and hide this zone. To unhide, use the <a href="#footer-menu">Footer Menu</a>.</li>
 </ul>
 <p><strong>Advanced Tab:</strong></p>
 <ul>
@@ -612,7 +612,7 @@
 <p><strong>Station Type</strong> (Virtual Zone): Configure special properties so a station can control devices or actions beyond a standard sprinkler valve. These <strong>special/virtual</strong> station types do NOT consume a physical output - you can define them freely up to the controller’s maximum zone count, even without zone expanders.</p>
 <ul>
 <li><span class="hllight"><strong>Standard</strong></span> (default): Regular sprinkler zone.</li>
-<li><span class="hllight"><strong>RF:</strong></span> Controls remote RF (Radio Frequency) power sockets via an external transmitter (requires <a href="">RFtoy</a> for code learning), allowing you to switch powerline devices such as Christmas lights, heaters, pumps.</li>
+<li><span class="hllight"><strong>RF:</strong></span> Controls remote RF (Radio Frequency) power sockets via an external transmitter (requires <a href="https://opensprinkler.com/product/rftoy/">RFtoy</a> for code learning), allowing you to switch powerline devices such as Christmas lights, heaters, pumps.</li>
 <li><span class="hllight"><strong>Remote Station (IP):</strong></span> Triggers a zone on another OpenSprinkler using its <strong>IP, port, and zone index</strong> (both controllers must <strong>share the same device password</strong>).</li>
 <li><span class="hllight"><strong>Remote Station (OTC):</strong></span> Same as above but identifies the remote controller by its <strong>OpenThings Cloud token</strong>, ideal for managing devices across different networks. Again, both controllers must share the same password.</li>
 <li><span class="hllight"><strong>GPIO:</strong></span> Directly toggles an available GPIO pin on the controller (Active High/Low configurable). This type is disabled for controllers that do not have any available GPIO pins.</li>
@@ -681,7 +681,7 @@ If there are other queued zones in the <strong>same sequential group</strong>, a
 <ul>
 <li><strong>Location:</strong> Tap <em>Location</em> to open the map and search for your address; or click the pencil icon ✏️ to manually enter the GPS coordinates.<ul>
 <li><strong>PWS location:</strong> When using <strong>WUnderground (WU)</strong> as the weather data provider, you must select a <strong>Personal Weather Station (PWS)</strong> location.<ol>
-<li>First enter and submit a valid <strong>WU API key</strong> in the <a href="">Weather and Sensors</a> tab.</li>
+<li>First enter and submit a valid <strong>WU API key</strong> in the <a href="#weather-adjustment">Weather and Sensors</a> tab.</li>
 <li>Return to the Location setting - available PWS sites will appear as <strong>blue dots</strong> on the map.</li>
 <li>Click one of the blue dots as your PWS location.</li>
 </ol>
@@ -718,7 +718,7 @@ If there are other queued zones in the <strong>same sequential group</strong>, a
 <hr />
 <h4 id="station-handling">Station Handling</h4>
 <ul>
-<li><strong>Number of Stations:</strong> OpenSprinkler automatically detects the <strong>available zones</strong> (including expanders), but users must manually configure this number - it's allowed to exceed the physical zones to include <strong>Virtual Zones</strong> (see <a href="">Section 3?</a>). Default: <code>8</code> zones.</li>
+<li><strong>Number of Stations:</strong> OpenSprinkler automatically detects the <strong>available zones</strong> (including expanders), but users must manually configure this number - it's allowed to exceed the physical zones to include <strong>Virtual Zones</strong> (see <a href="#station-cards">Station Type</a>). Default: <code>8</code> zones.</li>
 <li><strong>Station Delay:</strong> Time gap between consecutive zones (<code>−600</code> to <code>+600</code> s, in 5-second steps). Default: <code>0</code> (no delay). Examples:<ul>
 <li><code>+60</code> → The next zone starts <code>1</code> minute <strong>after</strong> the previous finishes.</li>
 <li><code>-15</code> → The next zone starts <code>15</code> seconds <strong>before</strong> the previous ends (i.e. the two zones overlap by <code>15</code> seconds). Useful for managing water throttling issues.</li>
@@ -730,7 +730,7 @@ If there are other queued zones in the <strong>same sequential group</strong>, a
 <ul>
 <li><strong>Adjustment Method:</strong> Select a weather-based adjustment method.<ul>
 <li><strong>Manual</strong> (default): set <strong>% Watering</strong> manually.</li>
-<li>Other methods calculate adjustments automatically. Detailed explanations of supported methods are available on <a href="">OpenSprinkler Support</a>.</li>
+<li>Other methods calculate adjustments automatically. Detailed explanations of supported methods are available on <a href="https://openthings.freshdesk.com/support/solutions/articles/5000823370">OpenSprinkler Support</a>.</li>
 </ul>
 </li>
 <li><strong>Adjustment Method Options:</strong> Configure parameters for the selected method.</li>
@@ -862,7 +862,7 @@ If there are other queued zones in the <strong>same sequential group</strong>, a
 <li>Once tripped, the controller can continue running programs and zones (as long as they don’t trigger overcurrent again), but the alert persists until it's cleared (by clicking the status bar message), or when the controller is rebooted.  </li>
 <li>Set to <code>0</code> to use the system default.</li>
 <li>Set to <code>2550</code> (max) to disable this feature (<span class="hl_red"><strong>NOT recommended</strong></span> as disabling it exposes the controller to potential overcurrent damage).</li>
-<li>To diagnose the cause of overcurrent, perform a <a href=""><strong>Solenoid Resistance Test</strong></a>.</li>
+<li>To diagnose the cause of overcurrent, perform a <a href="../../troubleshooting/#wiring-and-solenoids"><strong>Solenoid Resistance Test</strong></a>.</li>
 <li>This feature is only available on AC/DC-powered OpenSprinkler v2.3 &amp; v3.x (other controllers like OSPi lack current-sensing capability).</li>
 </ul>
 </li>
@@ -929,7 +929,7 @@ If there are other queued zones in the <strong>same sequential group</strong>, a
 <p>Click <strong>Add</strong> ➕ in the upper-right corner to create a new program. Each program includes:</p>
 <p><span class="hllight"><strong>Basic Settings:</strong></span></p>
 <ul>
-<li><strong>Program Name:</strong> Up to 32 characters. (See <a href="">Program Name Annotations</a> for supported suffixes).</li>
+<li><strong>Program Name:</strong> Up to 32 characters. (See <a href="#program-name-annotations">Program Name Annotations</a> for supported suffixes).</li>
 <li><strong>Enabled:</strong> Enable/disable the program.</li>
 <li><strong>Use Weather Adjustment:</strong> Apply weather-based adjustments, including current <strong>% Watering</strong>, <strong>Weather Restrictions</strong>, and <strong>Multi-day Averaging</strong> (for Interval programs only).</li>
 <li><strong>Enable Date Range:</strong> Restrict program operation to a date range. Examples:<ul>

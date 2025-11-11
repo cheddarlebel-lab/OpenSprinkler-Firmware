@@ -248,7 +248,7 @@ You can use buttons on the controller to bypass the device password. To do so:</
 <hr />
 <p><strong>I changed my WiFi router/SSID/password. How do I reset WiFi?</strong>
 <span class="vsp1"></span>
-<strong>Reset to AP (Access Point) mode</strong>: hold <strong>B3</strong>, then press <strong>B2</strong> within 1-2 seconds (similar to pressing Ctrl+C on a keyboard). Confirm on the LCD when prompted. The unit will reboot into AP mode. Follow the <a href="">WiFi Configuration step</a> in the user manual.</p>
+<strong>Reset to AP (Access Point) mode</strong>: hold <strong>B3</strong>, then press <strong>B2</strong> within 1-2 seconds (similar to pressing Ctrl+C on a keyboard). Confirm on the LCD when prompted. The unit will reboot into AP mode. Follow the <a href="../2.2.1/221_4_manual/#step-4-setting-up-wifi-ethernet">WiFi Configuration step</a> in the user manual.</p>
 <p>If Reset to AP doesn't work, perform a Factory Reset (see below).</p>
 <hr />
 <p><strong>How to perform a factory reset?</strong></p>
@@ -313,7 +313,7 @@ If your controller can't connect or stay connected via wired Ethernet, try these
 <li><strong>Disable PoE</strong> (Power-over-Ethernet) on that port: OpenSprinkler’s wired module is <strong>not PoE-compatible</strong>. PoE-enabled port can cause it to malfunction.</li>
 <li><strong>DHCP Setting:</strong> Leave the controller on DHCP, and set a <strong>DHCP reservation</strong> (IP-to-Mac) on your router to assign it a fixed IP. If you must use Static IP, verify <strong>Gateway IP, DNS, Subnet Mask</strong> are all correct and compatible with your router settings.</li>
 <li><strong>Use a dedicated router:</strong> If your wired network is very busy, the most effective solution is to place OpenSprinkler on a dedicated router to isolate it from heavy traffic. </li>
-<li><strong>Set an auto-reboot program:</strong> If the controller connects initially but doesn't stay connected, a work-around is to set an auto-reboot program (daily or any regular interval of your choice). See <a href="">Program Annotation</a> in the user manual.</li>
+<li><strong>Set an auto-reboot program:</strong> If the controller connects initially but doesn't stay connected, a work-around is to set an auto-reboot program (daily or any regular interval of your choice). See <a href="2.2.1/221_4_manual/#program-name-annotations">Program Annotation</a> in the user manual.</li>
 </ol>
 <p><strong><u>For OSPi</u>:</strong> Networking is managed by RPi. Ensure RPi has adequate power (OSPi supplies up to 500 mA. RPi 3/4/5 may need extra power via USB, otherwise network may be unstable).</p>
 <hr />
@@ -325,7 +325,7 @@ Remote access requires using an <strong>OpenThings Cloud (OTC) token</strong>. T
 <h3 id="ui-app-time-and-lcd">UI, App, Time, and LCD</h3>
 <p><strong>Blank page when opening the controller's homepage</strong></p>
 <ol>
-<li><strong>Firmware too old:</strong> If your controller's firmware is <strong>older than <code>2.2.0</code></strong>, update to the latest. Older firmwares can't parse newer weather data format, causing corruption and blank homepage. See <a href="">firmware update instructions</a>.</li>
+<li><strong>Firmware too old:</strong> If your controller's firmware is <strong>older than <code>2.2.0</code></strong>, update to the latest. Older firmwares can't parse newer weather data format, causing corruption and blank homepage. See <a href="../#firmware-update">firmware update instructions</a>.</li>
 <li><strong>Check for errors:</strong> On a desktop/laptop, open a browser window, turn on <strong>Developer Console</strong> (e.g. in Chrome, go to <strong>Settings</strong> → <strong>More Tools</strong> → <strong>Developer Tools</strong> → click the <strong>Console</strong> tab). Open the controller's homepage and note any errors in the console window.</li>
 <li><strong>Reset UI Source:</strong> If you used a custom UI, reset it to the default: visit <code>http://os-ip/su</code> where <code>os-ip</code> is your controller's IP address. Reset the <code>UI Source</code> to the default.</li>
 <li><strong>Diagnose with API test script:</strong> <a download="TestOSAPI220.html" href="../assets/scripts/TestOSAPI220.html">Download the API test script</a>. Open it in a browser, test your controller with the <code>/ja</code> (JSON All) endpoint. If you see an <strong>INVALID JSON</strong> error, the stored data is corrupted, which is why the homepage hangs.</li>
@@ -344,7 +344,7 @@ Starting with firmware 2.2.0, the old <strong>Sequential</strong> flag is replac
 <li>Each zone can be assigned to <strong>one of four Sequential groups</strong> or to the <strong>Parallel</strong> group.</li>
 <li>Putting a zone in <strong>Parallel</strong> group is equivalent to removing the <strong>Sequential</strong> flag in older firmwares.</li>
 </ul>
-<p>For details, refer to the <a href="">Firmware User Manual</a> and the <a href="https://openthings.freshdesk.com/support/solutions/articles/5000860920-videos-introduction-to-opensprinkler-v3">Video Tutorial</a>.</p>
+<p>For details, refer to the <a href="../2.2.1/221_4_manual/#zones-group-attribute">Firmware User Manual</a> and the <a href="https://openthings.freshdesk.com/support/solutions/articles/5000860920-videos-introduction-to-opensprinkler-v3">Video Tutorial</a>.</p>
 <hr />
 <p><strong>I am getting an error when accessing the logs.</strong>
 <span class="vsp1"></span>
