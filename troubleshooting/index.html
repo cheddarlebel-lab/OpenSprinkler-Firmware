@@ -133,7 +133,8 @@ The <strong>About</strong> page shows three different version numbers:</p>
 <li><strong>Firmware</strong> refers to the software running on the controller. Example: <code>2.2.1(3)</code>. It consists of a <strong>dotted version</strong> (e.g. <code>2.2.1</code>) and <strong>build number</strong> in parentheses. Firmware can be updated, though it is not automatic: you must manually upload a new firmware to it.</li>
 <li><strong>App</strong> refers to the mobile app or web UI running on your phone or browser. Example: <code>2.4.90</code>. The app/UI updates automatically on your phone when a new release is available.</li>
 </ul>
-<hr />
+<hr class="double">
+
 <h3 id="wiring-and-solenoids">Wiring and Solenoids</h3>
 <p><strong>Solenoid Resistance Test</strong>
 <span class="vsp1"></span>
@@ -173,7 +174,8 @@ Same root cause as above: you likely used a <strong>DC adapter</strong> on an <s
 <p><strong>Some zones can turn on but others won't.</strong>
 <span class="vsp1"></span>
 First, perform a <a href="#wiring-and-solenoids">solenoid resistance test</a> to rule out solenoid or wiring faults. If readings are normal, open the controller enclosure, take a clear photo of the PCB, and check for visible damage (burn marks/discoloration, bulged components). If you’re unsure, open a support ticket and attach the photo — include your hardware/firmware versions and describe the symptoms.</p>
-<hr />
+<hr class="double">
+
 <h3 id="power-and-expander">Power and Expander</h3>
 <p><strong>My controller doesn't power on.</strong>
 <span class="vsp1"></span>
@@ -227,7 +229,8 @@ First confirm the expander is detected (see the question above). Note that detec
 <li><strong>Check DIP switch:</strong> as described above. Every expander must have a unique DIP index. </li>
 <li><strong>Test one at a time:</strong> Power off; remove all expanders; connect only one; power on, and verify it's detected and its zones work. Repeat for each additional expander. This helps isolate the bad expander/cable.</li>
 </ul>
-<hr />
+<hr class="double">
+
 <h3 id="reset-and-configurations">Reset and Configurations</h3>
 <p><strong>What's the default device password?</strong>
 <span class="vsp1"></span>
@@ -272,7 +275,8 @@ You can use buttons on the controller to bypass the device password. To do so:</
 <p><strong>I get a blank page when accessing the controller. How do I save the configurations?</strong>
 <span class="vsp1"></span>
 See <a href="#ui-app-time-and-lcd">Blank page troubleshooting</a> below. In Step 4, use the <code>/ja</code> endpoint to fetch your settings directly, and save them as a file.</p>
-<hr />
+<hr class="double">
+
 <h3 id="connectivity">Connectivity</h3>
 <p><strong>WiFi connection issues</strong>
 <span class="vsp1"></span>
@@ -316,7 +320,8 @@ If your controller can't connect or stay connected via wired Ethernet, try these
 <p><strong>I can access the controller on my local network, but not when I am away.</strong>
 <span class="vsp1"></span>
 Remote access requires using an <strong>OpenThings Cloud (OTC) token</strong>. To check OTC status, from the homepage, swipe left to right to open the side menu, tap <strong>System Diagnostics</strong>. Make sure OTC status is <strong>Connected</strong>. In the OpenSprinkler mobile app, use the OTC token (instead of the controller's IP address) for remote access.</p>
-<hr />
+<hr class="double">
+
 <h3 id="ui-app-time-and-lcd">UI, App, Time, and LCD</h3>
 <p><strong>Blank page when opening the controller's homepage</strong></p>
 <ol>
@@ -407,7 +412,8 @@ From the homepage, swipe left to right to open the side menu, tap <strong>System
 If you purchased your OpenSprinkler within one year, it’s covered under warranty: submit a support ticket to receive a replacement display at no cost.</p>
 <p>If your purchase is out of warranty: replace it with an off-the-shelf module from <a href="https://www.amazon.com">Amazon</a> or <a href="https://www.aliexpress.com">Aliexpress</a>. For OpenSprinkler v3.x and OSPi v2.x, search <code>"I2C OLED 0.96"</code> (the part number is <code>SSD1315</code> or <code>SSD1306</code>). The pin order must be <code>GND, VCC, SCL, SDA</code> (most common type). Do <strong>NOT</strong> use ones with pins ordered VCC, GND, SCL, SDA as that's incompatible.</p>
 <p>To replace: power off the controller; open the enclosure; carefully unplug the existing LCD; plug in the new LCD to the same position; power on and verify.</p>
-<hr />
+<hr class="double">
+
 <h3 id="ospi-specific">OSPi Specific</h3>
 <p><strong>Firmware compilation errors</strong>
 <span class="vsp1"></span>
