@@ -211,6 +211,7 @@ First confirm the expander is detected (see the question above). Note that detec
 <p><strong>The expander is recognized, but zones on the expander don't work.</strong></p>
 <ol>
 <li><strong>Confirm detection:</strong> Follow the questions above to verify the expander is detected.</li>
+<li><strong>Reboot the controller</strong> to allow it to re-detect expanders. Any expander change (connecting, disconnecting, changing DIP) should be done <strong>while the main controller is powered off</strong>.</li>
 <li><strong>Check the COM (common) wire:</strong> All zones including expanded must have a common wire that goes to the COM terminal on the main controller. A missing/broken COM wire will cause zones to stop working.</li>
 <li><strong>Perform a <a href="#wiring-and-solenoids">solenoid resistance test</a></strong> to rule out solenoid and wiring issues.</li>
 <li><strong>Check zones on the main controller:</strong> If the first eight zones exhibit the same issue, this is likely due to a broken fuse/COM wire; otherwise, it's more likely an expander-specific issue.</li>
