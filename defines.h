@@ -26,6 +26,11 @@
 
 //#define ENABLE_DEBUG  // enable serial debug
 
+// NLI Custom Firmware Extensions
+#define NLI_FIRMWARE
+#define NLI_FW_VERSION         5
+#define NLI_CURRENT_PUBLISH_MS 5000  // publish board current every 5s during zone runs
+
 typedef unsigned long ulong;
 
 #define TMP_BUFFER_SIZE      320   // scratch buffer size

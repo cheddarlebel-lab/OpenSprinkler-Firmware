@@ -1121,6 +1121,11 @@ void server_json_options_main() {
 
 	bfill.emit_p(PSTR(",\"dexp\":$D,\"mexp\":$D,\"hwt\":$D,"), os.detect_exp(), MAX_EXT_BOARDS, os.hw_type);
 
+#ifdef NLI_FIRMWARE
+	// NLI: emit nli version INSIDE the JSON object, before the closing "ms" key
+	bfill.emit_p(PSTR("\"nli\":$D,"), NLI_FW_VERSION);
+#endif
+
 	// print master array
 	unsigned char masid, optidx;
 	bfill.emit_p(PSTR("\"ms\":["));
@@ -1369,8 +1374,16 @@ void server_home(OTF_PARAMS_DEF)
 #endif
 	bfill.emit_p(PSTR("<!DOCTYPE html><html><head>$F</head><body><script>"), htmlMobileHeader);
 	// send server variables and javascript packets
-	bfill.emit_p(PSTR("var ver=$D,ipas=$D;</script>"),
-							 OS_FW_VERSION, os.iopts[IOPT_IGNORE_PASSWORD]);
+	bfill.emit_p(PSTR("var ver=$D,ipas=$D"
+#ifdef NLI_FIRMWARE
+		",nli_ver=$D"
+#endif
+		";</script>"),
+							 OS_FW_VERSION, os.iopts[IOPT_IGNORE_PASSWORD]
+#ifdef NLI_FIRMWARE
+							 , NLI_FW_VERSION
+#endif
+		);
 
 	bfill.emit_p(PSTR("<script src=\"$O/home.js\"></script></body></html>"), SOPT_JAVASCRIPTURL);
 

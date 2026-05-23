@@ -70,7 +70,11 @@
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 
+#ifdef NLI_FIRMWARE
+const char *user_agent_string = "OpenSprinkler/" TOSTRING(OS_FW_VERSION) "#" TOSTRING(OS_FW_MINOR) "-NLI/" TOSTRING(NLI_FW_VERSION);
+#else
 const char *user_agent_string = "OpenSprinkler/" TOSTRING(OS_FW_VERSION) "#" TOSTRING(OS_FW_MINOR);
+#endif
 
 void manual_start_program(unsigned char, unsigned char, unsigned char);
 
@@ -604,6 +608,44 @@ void do_loop()
 			} else {
 				currpoll_timeout = tn+CURRPOLL_INTERVAL;
 			}
+		}
+	}
+#endif
+
+#if defined(NLI_FIRMWARE) && defined(ARDUINO)
+	// NLI: Publish board current via MQTT every 5s when any zone is active
+	{
+		static ulong nli_curr_timeout = 0;
+		ulong tn = millis();
+		if(os.mqtt.enabled() && (long)(tn - nli_curr_timeout) > 0) {
+			// Check if any station is running
+			byte any_on = 0;
+			for(byte i = 0; i < os.nboards; i++) {
+				if(os.station_bits[i]) { any_on = 1; break; }
+			}
+			if(any_on) {
+				uint16_t raw = os.read_current(false);
+				uint16_t ema = os.read_current(true);
+				char topic[] = "current";
+				char payload[96];
+				// Build active station list
+				char zstr[48] = "[";
+				byte first = 1;
+				for(byte i = 0; i < os.nstations; i++) {
+					if(os.station_bits[i >> 3] & (1 << (i & 0x07))) {
+						if(!first) strcat(zstr, ",");
+						char n[4]; snprintf(n, sizeof(n), "%d", i);
+						strcat(zstr, n);
+						first = 0;
+					}
+				}
+				strcat(zstr, "]");
+				snprintf_P(payload, sizeof(payload),
+					PSTR("{\"curr\":%d,\"ema\":%d,\"zones\":%s}"),
+					raw, ema, zstr);
+				os.mqtt.publish(topic, payload);
+			}
+			nli_curr_timeout = tn + NLI_CURRENT_PUBLISH_MS;
 		}
 	}
 #endif

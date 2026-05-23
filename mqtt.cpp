@@ -572,9 +572,108 @@ void subscribe_callback(char *topic, unsigned char *payload, unsigned int length
 			manualRun(message);
 		}else if(message[1]=='r'){
 			runOnceProgram(message);
+#ifdef NLI_FIRMWARE
+		}else if(message[1]=='o'){
+			// NLI: Change options via MQTT — handle imin, imax, ife, ife2,
+			// sn1t, sn1o, sn2t, sn2o, fpr0, fpr1
+			int changed = 0;
+			int sensors_changed = 0;
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("imin"), true)){
+				os.iopts[IOPT_I_MIN_THRESHOLD] = (unsigned char)(atoi(tmp_buffer) / 10);
+				changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("imax"), true)){
+				os.iopts[IOPT_I_MAX_LIMIT] = (unsigned char)(atoi(tmp_buffer) / 10);
+				changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("ife"), true)){
+				os.iopts[IOPT_NOTIF_ENABLE] = (unsigned char)atoi(tmp_buffer);
+				changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("ife2"), true)){
+				os.iopts[IOPT_NOTIF2_ENABLE] = (unsigned char)atoi(tmp_buffer);
+				changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sn1t"), true)){
+				os.iopts[IOPT_SENSOR1_TYPE] = (unsigned char)atoi(tmp_buffer);
+				changed = 1; sensors_changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sn1o"), true)){
+				os.iopts[IOPT_SENSOR1_OPTION] = (unsigned char)atoi(tmp_buffer);
+				changed = 1; sensors_changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sn1on"), true)){
+				os.iopts[IOPT_SENSOR1_ON_DELAY] = (unsigned char)atoi(tmp_buffer);
+				changed = 1; sensors_changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sn1of"), true)){
+				os.iopts[IOPT_SENSOR1_OFF_DELAY] = (unsigned char)atoi(tmp_buffer);
+				changed = 1; sensors_changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sn2t"), true)){
+				os.iopts[IOPT_SENSOR2_TYPE] = (unsigned char)atoi(tmp_buffer);
+				changed = 1; sensors_changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sn2o"), true)){
+				os.iopts[IOPT_SENSOR2_OPTION] = (unsigned char)atoi(tmp_buffer);
+				changed = 1; sensors_changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sn2on"), true)){
+				os.iopts[IOPT_SENSOR2_ON_DELAY] = (unsigned char)atoi(tmp_buffer);
+				changed = 1; sensors_changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("sn2of"), true)){
+				os.iopts[IOPT_SENSOR2_OFF_DELAY] = (unsigned char)atoi(tmp_buffer);
+				changed = 1; sensors_changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("fpr0"), true)){
+				os.iopts[IOPT_PULSE_RATE_0] = (unsigned char)atoi(tmp_buffer);
+				changed = 1;
+			}
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("fpr1"), true)){
+				os.iopts[IOPT_PULSE_RATE_1] = (unsigned char)atoi(tmp_buffer);
+				changed = 1;
+			}
+			if(changed) {
+				os.iopts_save();
+				if(sensors_changed) os.sensor_resetall();
+				OSMqtt::publish("resp", "{\"result\":1}");
+			} else {
+				OSMqtt::publish("resp", "{\"result\":0,\"err\":\"no recognized params\"}");
+			}
+#endif
 		}
 	}else if(message[0]=='m' && message[1]=='p'){
 		programStart(message);
+#ifdef NLI_FIRMWARE
+	}else if(message[0]=='s' && message[1]=='p'){
+		// NLI: Change device password via MQTT — mirrors HTTP /sp endpoint.
+		// pw is already verified by checkPassword() at top of subscribe_callback.
+		// Body: sp&npw=<new_md5>&cpw=<new_md5>&pw=<current_md5>
+		// npw and cpw must match. Saved as-is (clients hash plaintext before sending).
+		char npw_buf[64];
+		char cpw_buf[64];
+		bool got_npw = findKeyVal(message, npw_buf, sizeof(npw_buf), PSTR("npw"), true);
+		bool got_cpw = findKeyVal(message, cpw_buf, sizeof(cpw_buf), PSTR("cpw"), true);
+		if(got_npw && got_cpw && strncmp(npw_buf, cpw_buf, sizeof(npw_buf)) == 0) {
+			os.sopt_save(SOPT_PASSWORD, npw_buf);
+			OSMqtt::publish("resp", "{\"result\":1,\"cmd\":\"sp\"}");
+		} else if(got_npw && got_cpw) {
+			OSMqtt::publish("resp", "{\"result\":3,\"err\":\"npw cpw mismatch\"}");
+		} else {
+			OSMqtt::publish("resp", "{\"result\":16,\"err\":\"missing npw/cpw\"}");
+		}
+	}else if(message[0]=='j' && message[1]=='c'){
+		// NLI: Query controller status — publish response on {prefix}/resp
+		uint16_t curr = os.read_current(true);
+		if((!os.status.program_busy) && (curr < os.baseline_current)) curr = 0;
+		char resp[192];
+		snprintf_P(resp, sizeof(resp),
+			PSTR("{\"curr\":%d,\"RSSI\":%d,\"fwv\":%d,\"nli\":%d,\"nbrd\":%d,\"en\":%d,\"rd\":%d}"),
+			curr, (int)WiFi.RSSI(), OS_FW_VERSION, NLI_FW_VERSION,
+			os.nboards, os.status.enabled, os.status.rain_delayed);
+		OSMqtt::publish("resp", resp);
+#endif
 	}else{
 		DEBUG_LOGF("Unsupported mqtt subscribe request\r\n");
 		return;

@@ -2371,6 +2371,15 @@ void OpenSprinkler::options_setup() {
 	} else	{
 
 		iopts_load();
+#ifdef NLI_FIRMWARE
+		// NLI: Ensure current sensing and notifications are always enabled on boot
+		bool nli_changed = false;
+		if(iopts[IOPT_I_MIN_THRESHOLD] != 80) { iopts[IOPT_I_MIN_THRESHOLD] = 80; nli_changed = true; }  // imin=800 (800/10)
+		if(iopts[IOPT_I_MAX_LIMIT] != 70) { iopts[IOPT_I_MAX_LIMIT] = 70; nli_changed = true; }          // imax=700 (700/10)
+		if(iopts[IOPT_NOTIF_ENABLE] != 255) { iopts[IOPT_NOTIF_ENABLE] = 255; nli_changed = true; }      // ife=255
+		if(iopts[IOPT_NOTIF2_ENABLE] != 255) { iopts[IOPT_NOTIF2_ENABLE] = 255; nli_changed = true; }    // ife2=255
+		if(nli_changed) iopts_save();
+#endif
 		nvdata_load();
 		last_reboot_cause = nvdata.reboot_cause;
 		nvdata.reboot_cause = REBOOT_CAUSE_POWERON;
@@ -2491,9 +2500,14 @@ void OpenSprinkler::options_setup() {
 		lcd.print((char)('0'+((OS_FW_VERSION/10)%10)));
 		lcd.print('.');
 		lcd.print((char)('0'+(OS_FW_VERSION%10)));
+#ifdef NLI_FIRMWARE
+		lcd_print_pgm(PSTR(" NLI v"));
+		lcd.print(NLI_FW_VERSION);
+#else
 		lcd.print('(');
 		lcd.print(OS_FW_MINOR);
 		lcd.print(')');
+#endif
 		delay(1000);
 		#endif
 	}

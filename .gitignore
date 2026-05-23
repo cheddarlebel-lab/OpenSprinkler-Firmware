@@ -15,3 +15,6 @@ node_modules
 *.json
 !package.json
 .DS_Store
+firmware-opensprinkler/
+releases/
+stock-backup/
