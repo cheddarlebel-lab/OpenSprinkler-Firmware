@@ -650,6 +650,33 @@ void do_loop()
 	}
 #endif
 
+#if defined(NLI_FIRMWARE) && defined(ARDUINO)
+	// NLI: Publish live flow rate via MQTT every 5s while a zone is running.
+	// Sends raw windowed counts only (flcrt/flwrt/flcto — identical to /jc); the
+	// bridge converts to GPM using the cloud calibration ppg, so recalibration
+	// applies without a reflash. The zone-stop sensor/flow total stays the source
+	// of truth for per-run volume — this stream is display-only.
+	if(os.iopts[IOPT_SENSOR1_TYPE]==SENSOR_TYPE_FLOW) {
+		static ulong nli_flow_timeout = 0;
+		ulong tn = millis();
+		if(os.mqtt.enabled() && (long)(tn - nli_flow_timeout) > 0) {
+			byte any_on = 0;
+			for(byte i = 0; i < os.nboards; i++) {
+				if(os.station_bits[i]) { any_on = 1; break; }
+			}
+			if(any_on) {
+				char topic[] = "sensor/flow_live";
+				char payload[80];
+				snprintf_P(payload, sizeof(payload),
+					PSTR("{\"flcrt\":%lu,\"flwrt\":%d,\"flcto\":%lu}"),
+					(unsigned long)os.flowcount_rt, FLOWCOUNT_RT_WINDOW, (unsigned long)flow_count);
+				os.mqtt.publish(topic, payload);
+			}
+			nli_flow_timeout = tn + NLI_FLOW_PUBLISH_MS;
+		}
+	}
+#endif
+
 	static time_os_t last_time = 0;
 	static ulong last_minute = 0;
 

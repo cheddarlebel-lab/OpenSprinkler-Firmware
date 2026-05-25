@@ -28,8 +28,9 @@
 
 // NLI Custom Firmware Extensions
 #define NLI_FIRMWARE
-#define NLI_FW_VERSION         5
+#define NLI_FW_VERSION         6
 #define NLI_CURRENT_PUBLISH_MS 5000  // publish board current every 5s during zone runs
+#define NLI_FLOW_PUBLISH_MS    5000  // publish live flow rate every 5s during zone runs
 
 typedef unsigned long ulong;
 
