@@ -25,6 +25,7 @@
 	#include <Arduino.h>
 	#if defined(ESP8266)
 		#include <ESP8266WiFi.h>
+		#include <ESP8266httpUpdate.h>  // NLI: MQTT-triggered self-OTA
 	#else
 		#include <Ethernet.h>
 	#endif
@@ -673,6 +674,38 @@ void subscribe_callback(char *topic, unsigned char *payload, unsigned int length
 			curr, (int)WiFi.RSSI(), OS_FW_VERSION, NLI_FW_VERSION,
 			os.nboards, os.status.enabled, os.status.rain_delayed);
 		OSMqtt::publish("resp", resp);
+	}else if(message[0]=='o' && message[1]=='t' && message[2]=='a'){
+		// NLI: MQTT-triggered self-OTA. Body: ota&url=<http url>&pw=<md5>
+		// pw already verified by checkPassword(). Device pulls the .bin over
+		// plain HTTP (bridge-served, no TLS) and self-flashes via ESP8266httpUpdate.
+		// ESP OTA writes the inactive flash bank and only swaps on a complete,
+		// MD5-valid image — a failed/aborted download is a no-op (no brick).
+		#if defined(ESP8266)
+		char url[256];
+		if(findKeyVal(message, url, sizeof(url), PSTR("url"), true) && strncmp(url, "http://", 7)==0) {
+			OSMqtt::publish("ota", "{\"state\":\"downloading\"}");
+			delay(200);                       // let the publish flush before we block
+			if(mqtt_client) mqtt_client->loop();
+			WiFiClient ota_client;
+			ESPhttpUpdate.rebootOnUpdate(true);
+			t_httpUpdate_return ret = ESPhttpUpdate.update(ota_client, url);
+			// HTTP_UPDATE_OK reboots into the new image, so only failure paths return here.
+			if(ret == HTTP_UPDATE_FAILED) {
+				char err[200];
+				snprintf_P(err, sizeof(err),
+					PSTR("{\"state\":\"error\",\"code\":%d,\"msg\":\"%s\"}"),
+					ESPhttpUpdate.getLastError(),
+					ESPhttpUpdate.getLastErrorString().c_str());
+				OSMqtt::publish("ota", err);
+			} else if(ret == HTTP_UPDATE_NO_UPDATES) {
+				OSMqtt::publish("ota", "{\"state\":\"no_update\"}");
+			}
+		} else {
+			OSMqtt::publish("ota", "{\"state\":\"error\",\"msg\":\"missing or non-http url\"}");
+		}
+		#else
+		OSMqtt::publish("ota", "{\"state\":\"error\",\"msg\":\"ota unsupported on this platform\"}");
+		#endif
 #endif
 	}else{
 		DEBUG_LOGF("Unsupported mqtt subscribe request\r\n");
