@@ -108,6 +108,11 @@ NotifQueue notif; // NotifQueue object
  * flow_last_gpm - last flow rate measured (averaged over flow_gallons) from last valve stopped (used to write to log file). */
 ulong flow_begin, flow_start, flow_stop, flow_gallons, flow_rt_reset, last_flow_rt;
 ulong flow_count = 0;
+// NLI: per-station flow attribution. flow_count_station_start is snapshotted when a
+// station turns on; flow_count_station holds the pulse delta for the run, set at
+// station-off and read by the notifier to publish the station's volume.
+ulong flow_count_station_start = 0;
+ulong flow_count_station = 0;
 unsigned char prev_flow_state = HIGH;
 float flow_last_gpm = 0;
 int32_t flow_rt_period = -1;
@@ -656,23 +661,42 @@ void do_loop()
 	// bridge converts to GPM using the cloud calibration ppg, so recalibration
 	// applies without a reflash. The zone-stop sensor/flow total stays the source
 	// of truth for per-run volume — this stream is display-only.
-	if(os.iopts[IOPT_SENSOR1_TYPE]==SENSOR_TYPE_FLOW) {
+	if(os.iopts[IOPT_SENSOR1_TYPE]==SENSOR_TYPE_FLOW && os.mqtt.enabled()) {
 		static ulong nli_flow_timeout = 0;
+		static ulong nli_idle_flow_timeout = 0;
+		static ulong nli_idle_flcto = 0;
 		ulong tn = millis();
-		if(os.mqtt.enabled() && (long)(tn - nli_flow_timeout) > 0) {
-			byte any_on = 0;
-			for(byte i = 0; i < os.nboards; i++) {
-				if(os.station_bits[i]) { any_on = 1; break; }
-			}
-			if(any_on) {
-				char topic[] = "sensor/flow_live";
-				char payload[80];
+		byte any_on = 0;
+		for(byte i = 0; i < os.nboards; i++) {
+			if(os.station_bits[i]) { any_on = 1; break; }
+		}
+		const char topic[] = "sensor/flow_live";
+		char payload[80];
+		if(any_on) {
+			// Running: stream raw windowed counts every 5s; the bridge converts to GPM
+			// and attributes to the active zone.
+			if((long)(tn - nli_flow_timeout) > 0) {
 				snprintf_P(payload, sizeof(payload),
 					PSTR("{\"flcrt\":%lu,\"flwrt\":%d,\"flcto\":%lu}"),
 					(unsigned long)os.flowcount_rt, FLOWCOUNT_RT_WINDOW, (unsigned long)flow_count);
 				os.mqtt.publish(topic, payload);
+				nli_flow_timeout = tn + NLI_FLOW_PUBLISH_MS;
 			}
-			nli_flow_timeout = tn + NLI_FLOW_PUBLISH_MS;
+			nli_idle_flcto = flow_count; // keep the idle baseline current while running
+		} else {
+			// Idle (no zone running): if pulses are still counting, the main line is
+			// flowing with nothing on → publish so the bridge can flag a leak. Slow
+			// cadence, and only when flcto actually advanced (silent when there's no leak).
+			if((long)(tn - nli_idle_flow_timeout) > 0) {
+				if(flow_count > nli_idle_flcto) {
+					snprintf_P(payload, sizeof(payload),
+						PSTR("{\"flcrt\":%lu,\"flwrt\":%d,\"flcto\":%lu,\"idle\":1}"),
+						(unsigned long)os.flowcount_rt, FLOWCOUNT_RT_WINDOW, (unsigned long)flow_count);
+					os.mqtt.publish(topic, payload);
+				}
+				nli_idle_flcto = flow_count;
+				nli_idle_flow_timeout = tn + NLI_IDLE_FLOW_PUBLISH_MS;
+			}
 		}
 	}
 #endif
@@ -1316,6 +1340,10 @@ void turn_on_station(unsigned char sid, ulong duration) {
 	flow_start=0;
 	//Added flow_gallons reset to station turn on.
 	flow_gallons=0;
+	// NLI: snapshot the pulse counter so we can report this station's flow volume at
+	// turn-off. Single global → valid for sequential runs; the one main-line meter
+	// can't attribute concurrent zones regardless.
+	flow_count_station_start = flow_count;
 
 	if (os.set_station_bit(sid, 1, duration)) {
 		notif.add(NOTIFY_STATION_ON, sid, duration);
@@ -1424,6 +1452,10 @@ void turn_off_station(unsigned char sid, time_os_t curr_time, unsigned char shif
 		else flow_last_gpm = (float) 60000 / (float)((flow_stop-flow_begin) / (flow_gallons - 1));
 	}// RAH calculate GPM, 1 pulse per gallon
 	else {flow_last_gpm = 0;}  // RAH if not one gallon (two pulses) measured then record 0 gpm
+
+	// NLI: per-station pulse count for this run (volume = pulses × gal/pulse). Unlike
+	// flow_last_gpm (a rate with a 90s warmup), this is accurate for any run length.
+	flow_count_station = (flow_count > flow_count_station_start) ? (flow_count - flow_count_station_start) : 0;
 
 	// check if the current time is past the scheduled start time,
 	// because we may be turning off a station that hasn't started yet

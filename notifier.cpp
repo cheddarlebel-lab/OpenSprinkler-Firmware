@@ -35,6 +35,7 @@ extern ProgramData pd;
 extern char tmp_buffer[];
 extern char ether_buffer[];
 extern float flow_last_gpm;
+extern ulong flow_count_station;  // NLI: pulses during the station run just ended
 
 extern const char *user_agent_string;
 
@@ -236,10 +237,14 @@ void push_message(uint16_t type, uint32_t lval, float fval, uint8_t bval) {
 					snprintf_P(payload+strlen(payload), PUSH_PAYLOAD_LEN, PSTR(",\"duration\":%d"), (int)fval);
 					if (os.iopts[IOPT_SENSOR1_TYPE]==SENSOR_TYPE_FLOW) {
 						float gpm = flow_last_gpm * flowrate100 / 100.f;
+						// NLI: per-station volume = pulses this run × gal/pulse (flowrate100/100).
+						// Accurate for any run length (no 90s warmup); the bridge attributes it
+						// to this zone for per-zone water tracking.
+						float volume = flow_count_station * flowrate100 / 100.f;
 						#if defined(OS_AVR)
-						snprintf_P(payload+strlen(payload), PUSH_PAYLOAD_LEN, PSTR(",\"flow\":%d.%02d"), (int)gpm, (int)(gpm*100)%100);
+						snprintf_P(payload+strlen(payload), PUSH_PAYLOAD_LEN, PSTR(",\"flow\":%d.%02d,\"volume\":%d.%02d"), (int)gpm, (int)(gpm*100)%100, (int)volume, (int)(volume*100)%100);
 						#else
-						snprintf_P(payload+strlen(payload), PUSH_PAYLOAD_LEN, PSTR(",\"flow\":%.2f"), gpm);
+						snprintf_P(payload+strlen(payload), PUSH_PAYLOAD_LEN, PSTR(",\"flow\":%.2f,\"volume\":%.2f"), gpm, volume);
 						#endif
 					}
 				}
