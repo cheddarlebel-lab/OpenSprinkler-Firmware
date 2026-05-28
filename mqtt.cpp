@@ -642,11 +642,175 @@ void subscribe_callback(char *topic, unsigned char *payload, unsigned int length
 			} else {
 				OSMqtt::publish("resp", "{\"result\":0,\"err\":\"no recognized params\"}");
 			}
+		}else if(message[1]=='p'){
+			// NLI: Change program via MQTT — mirrors HTTP /cp endpoint.
+			// pw already verified by checkPassword() at top of subscribe_callback.
+			// Body: cp&pid=<idx>&v=[flag,d0,d1,[s0,s1,s2,s3],[d0,d1,..]]&name=<urlenc>&pw=<md5>
+			//   pid=-1 → add new program. pid>=0 → modify existing.
+			//   en=0/1 or uwt=0/1 alone → flag-bit toggle (no v required).
+			//   from/to (date range) optional.
+			char pid_buf[12];
+			if(!findKeyVal(message, pid_buf, sizeof(pid_buf), PSTR("pid"), true)){
+				OSMqtt::publish("resp", "{\"result\":16,\"cmd\":\"cp\",\"err\":\"missing pid\"}");
+				return;
+			}
+			int pid = atoi(pid_buf);
+			// Semantics for MQTT cp:
+			//   pid >= 0 and < nprograms       → modify that slot
+			//   pid == -1 OR pid >= nprograms  → append at next free slot
+			// The resp echoes the actual allocated pid so the cloud can
+			// realign its stored program_index without needing to probe /jp
+			// first. This survives NVRAM wipes (factory reset / OTA quirks)
+			// where Supabase carries a pid the device no longer has.
+			if (pid < -1) {
+				OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"cp\",\"err\":\"pid < -1\"}");
+				return;
+			}
+
+			// Shortcut: en=0/1 — toggle enable bit on existing program
+			if (findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("en"), true)) {
+				if(pid<0){
+					OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"cp\",\"err\":\"en requires pid>=0\"}");
+					return;
+				}
+				pd.set_flagbit(pid, PROGRAMSTRUCT_EN_BIT, (tmp_buffer[0]=='0')?0:1);
+				OSMqtt::publish("resp", "{\"result\":1,\"cmd\":\"cp\"}");
+				return;
+			}
+
+			// Shortcut: uwt=0/1 — toggle weather-adjust bit
+			if (findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("uwt"), true)) {
+				if(pid<0){
+					OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"cp\",\"err\":\"uwt requires pid>=0\"}");
+					return;
+				}
+				pd.set_flagbit(pid, PROGRAMSTRUCT_UWT_BIT, (tmp_buffer[0]=='0')?0:1);
+				OSMqtt::publish("resp", "{\"result\":1,\"cmd\":\"cp\"}");
+				return;
+			}
+
+			// Full-program write
+			ProgramStruct prog;
+
+			// name
+			if (findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("name"), true)) {
+				urlDecode(tmp_buffer);
+				strReplaceQuoteBackslash(tmp_buffer);
+				strncpy(prog.name, tmp_buffer, PROGRAM_NAME_SIZE);
+			} else {
+				strcpy_P(prog.name, PSTR("Program "));
+				snprintf(prog.name+8, PROGRAM_NAME_SIZE - 8, "%d", (pid==-1) ? (pd.nprograms+1) : (pid+1));
+			}
+
+			// from / to (date range, optional but paired)
+			if (findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("from"), true)) {
+				int16_t date = atoi(tmp_buffer);
+				if(!isValidDate((uint16_t)date)){
+					OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"cp\",\"err\":\"from invalid\"}");
+					return;
+				}
+				prog.daterange[0] = date;
+				if (findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("to"), true)) {
+					date = atoi(tmp_buffer);
+					if(!isValidDate((uint16_t)date)){
+						OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"cp\",\"err\":\"to invalid\"}");
+						return;
+					}
+					prog.daterange[1] = date;
+				} else {
+					OSMqtt::publish("resp", "{\"result\":16,\"cmd\":\"cp\",\"err\":\"missing to\"}");
+					return;
+				}
+			}
+
+			// v=[flag,d0,d1,[s0,s1,s2,s3],[dur0,...]]
+			// parse_listdata uses the global tmp_buffer as scratch — keep v in a separate buffer.
+			char v_buf[TMP_BUFFER_SIZE];
+			if (!findKeyVal(message, v_buf, sizeof(v_buf), PSTR("v"), true)) {
+				OSMqtt::publish("resp", "{\"result\":16,\"cmd\":\"cp\",\"err\":\"missing v\"}");
+				return;
+			}
+			urlDecode(v_buf); // tolerate URL-encoded brackets/commas
+
+			// Find the opening '[' of v=[...]
+			char *pv = v_buf;
+			while(*pv && *pv!='['){ pv++; }
+			if(*pv != '['){
+				OSMqtt::publish("resp", "{\"result\":18,\"cmd\":\"cp\",\"err\":\"v missing [\"}");
+				return;
+			}
+			pv++; // step past '['
+
+			// Header: flag, days0, days1
+			*(char*)(&prog) = parse_listdata(&pv);
+			prog.days[0] = parse_listdata(&pv);
+			prog.days[1] = parse_listdata(&pv);
+
+			if (prog.type == PROGRAM_TYPE_INTERVAL) {
+				if (prog.days[1] == 0){
+					OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"cp\",\"err\":\"interval offset=0\"}");
+					return;
+				}
+				if (prog.days[1] >= 1) {
+					pd.drem_to_absolute(prog.days);
+				}
+			}
+
+			// Start times
+			pv++; // '['
+			for (unsigned char k=0; k<MAX_NUM_STARTTIMES; k++) {
+				prog.starttimes[k] = parse_listdata(&pv);
+			}
+			pv++; // ','
+			pv++; // '['
+
+			// Durations
+			unsigned char k;
+			for (k=0; k<os.nstations; k++) {
+				prog.durations[k] = parse_listdata(&pv);
+			}
+			for (; k<MAX_NUM_STATIONS; k++) {
+				prog.durations[k] = 0;
+			}
+
+			// pid in [0, nprograms-1] → modify. Anything else → append.
+			bool addMode = (pid < 0) || (pid >= pd.nprograms);
+			bool ok = addMode ? pd.add(&prog) : pd.modify(pid, &prog);
+			if(ok){
+				char resp[64];
+				snprintf_P(resp, sizeof(resp),
+					PSTR("{\"result\":1,\"cmd\":\"cp\",\"pid\":%d}"),
+					addMode ? (pd.nprograms - 1) : pid);
+				OSMqtt::publish("resp", resp);
+			} else {
+				OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"cp\",\"err\":\"add/modify failed\"}");
+			}
 #endif
 		}
 	}else if(message[0]=='m' && message[1]=='p'){
 		programStart(message);
 #ifdef NLI_FIRMWARE
+	}else if(message[0]=='d' && message[1]=='p'){
+		// NLI: Delete program via MQTT — mirrors HTTP /dp endpoint.
+		// pw already verified by checkPassword() at top of subscribe_callback.
+		// Body: dp&pid=<idx>&pw=<md5>    (pid=-1 deletes all programs)
+		char pid_buf[12];
+		if(!findKeyVal(message, pid_buf, sizeof(pid_buf), PSTR("pid"), true)){
+			OSMqtt::publish("resp", "{\"result\":16,\"cmd\":\"dp\",\"err\":\"missing pid\"}");
+			return;
+		}
+		int pid = atoi(pid_buf);
+		if (pid == -1) {
+			pd.eraseall();
+			OSMqtt::publish("resp", "{\"result\":1,\"cmd\":\"dp\",\"pid\":-1}");
+		} else if (pid >= 0 && pid < pd.nprograms) {
+			pd.del(pid);
+			char resp[48];
+			snprintf_P(resp, sizeof(resp), PSTR("{\"result\":1,\"cmd\":\"dp\",\"pid\":%d}"), pid);
+			OSMqtt::publish("resp", resp);
+		} else {
+			OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"dp\",\"err\":\"pid out of range\"}");
+		}
 	}else if(message[0]=='s' && message[1]=='p'){
 		// NLI: Change device password via MQTT — mirrors HTTP /sp endpoint.
 		// pw is already verified by checkPassword() at top of subscribe_callback.
