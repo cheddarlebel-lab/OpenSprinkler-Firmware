@@ -359,8 +359,14 @@ unsigned char ProgramStruct::check_match(time_os_t t, bool *to_delete) {
 				return 1;
 			}
 
-			// otherwise, current_minute must be larger than start time, and interval must be non-zero
-			if (current_minute > start && interval) {
+			// otherwise, current_minute must be larger than start time, and
+			// interval/repeat must be VALID. A malformed program (e.g. a fixed
+			// program mistakenly stored with starttime_type=0 and unused -1
+			// slots) yields interval=-1/repeat=-1; without these bounds the
+			// modulo below matches every minute after the start time and the
+			// program re-fires all day (2026-05-28 fleet runaway). Require a
+			// positive interval and non-negative repeat for a real repeat.
+			if (current_minute > start && interval > 0 && repeat >= 0) {
 				// check if we are on any interval match
 				int16_t c = (current_minute - start) / interval;
 				if ((c * interval == (current_minute - start)) && c <= repeat) {
@@ -375,8 +381,9 @@ unsigned char ProgramStruct::check_match(time_os_t t, bool *to_delete) {
 			}
 		}
 	}
-	// to proceed, program has to be repeating type, and interval and repeat must be non-zero
-	if (starttime_type || !interval)	return 0;
+	// to proceed, program has to be repeating type, and interval/repeat must be
+	// valid (positive interval, non-negative repeat — see guard above).
+	if (starttime_type || interval <= 0 || repeat < 0)	return 0;
 
 	// next, assume program started the previous day and ran over night
 	if (check_day_match(t-86400L)) {
