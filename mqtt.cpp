@@ -838,6 +838,73 @@ void subscribe_callback(char *topic, unsigned char *payload, unsigned int length
 			curr, (int)WiFi.RSSI(), OS_FW_VERSION, NLI_FW_VERSION,
 			os.nboards, os.status.enabled, os.status.rain_delayed);
 		OSMqtt::publish("resp", resp);
+	}else if(message[0]=='j' && message[1]=='p'){
+		// NLI: Read program(s) back over MQTT — the read-side counterpart of cp.
+		// Lets the cloud independently verify what is actually stored in NVRAM
+		// (the device's own MQTT tunnel; no LAN HTTP / cloudflared needed).
+		//   jp           -> {"result":1,"cmd":"jp","nprogs":N,"nstations":S}
+		//   jp&pid=K     -> {"result":1,"cmd":"jp","pid":K,"nprogs":N,
+		//                     "v":[flag,d0,d1,[s0..s3],[d0..dN]],"name":"..."}
+		// One program per message keeps every reply well under MQTT_MAX_PACKET_SIZE
+		// (1KB); the bridge fetches pid=0..nprogs-1 to assemble the full list.
+		if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("pid"), true)){
+			int pid = atoi(tmp_buffer);
+			if(pid < 0 || pid >= pd.nprograms){
+				OSMqtt::publish("resp", "{\"result\":17,\"cmd\":\"jp\",\"err\":\"pid out of range\"}");
+			}else{
+				ProgramStruct prog;
+				pd.read((unsigned char)pid, &prog);
+				if(prog.type == PROGRAM_TYPE_INTERVAL && prog.days[1] >= 1){
+					pd.drem_to_relative(prog.days);
+				}
+				unsigned char flag = *(unsigned char*)(&prog);
+				// Append helper guards against snprintf's would-be-length return
+				// running the index past the end (which would feed a negative
+				// size, i.e. huge size_t, to the next call — memory unsafe).
+				// start times: int16_t[MAX_NUM_STARTTIMES]
+				char starts[48]; int so = 0;
+				#define JP_APPEND(buf, idx, ...) do { \
+					int _rem = (int)sizeof(buf) - (idx); \
+					if(_rem > 1){ int _n = snprintf_P((buf)+(idx), _rem, __VA_ARGS__); \
+						(idx) += (_n < 0 || _n >= _rem) ? (_rem - 1) : _n; } } while(0)
+				JP_APPEND(starts, so, PSTR("["));
+				for(int i=0;i<MAX_NUM_STARTTIMES;i++){
+					JP_APPEND(starts, so, PSTR("%d%s"),
+						(int)prog.starttimes[i], (i<MAX_NUM_STARTTIMES-1)?",":"");
+				}
+				JP_APPEND(starts, so, PSTR("]"));
+				// durations: int16_t[] per station (non-negative water seconds).
+				// Sized for OS max expansion (MAX_NUM_STATIONS) so it never truncates.
+				char durs[MAX_NUM_STATIONS*7+4]; int du = 0;
+				JP_APPEND(durs, du, PSTR("["));
+				for(int i=0;i<os.nstations;i++){
+					JP_APPEND(durs, du, PSTR("%d%s"),
+						(int)prog.durations[i], (i<os.nstations-1)?",":"");
+				}
+				JP_APPEND(durs, du, PSTR("]"));
+				#undef JP_APPEND
+				// program name — JSON-escape " and \ so a user-set name can't break the reply
+				char nm[2*PROGRAM_NAME_SIZE+1]; int ni = 0;
+				for(int i=0;i<PROGRAM_NAME_SIZE && prog.name[i] && ni < (int)sizeof(nm)-2;i++){
+					char c = prog.name[i];
+					if(c=='"' || c=='\\') nm[ni++] = '\\';
+					nm[ni++] = c;
+				}
+				nm[ni] = 0;
+				char jpbuf[400];
+				snprintf_P(jpbuf, sizeof(jpbuf),
+					PSTR("{\"result\":1,\"cmd\":\"jp\",\"pid\":%d,\"nprogs\":%d,\"v\":[%u,%u,%u,%s,%s],\"name\":\"%s\"}"),
+					pid, (int)pd.nprograms, (unsigned)flag,
+					(unsigned)prog.days[0], (unsigned)prog.days[1], starts, durs, nm);
+				OSMqtt::publish("resp", jpbuf);
+			}
+		}else{
+			char jpsum[80];
+			snprintf_P(jpsum, sizeof(jpsum),
+				PSTR("{\"result\":1,\"cmd\":\"jp\",\"nprogs\":%d,\"nstations\":%d}"),
+				(int)pd.nprograms, (int)os.nstations);
+			OSMqtt::publish("resp", jpsum);
+		}
 	}else if(message[0]=='o' && message[1]=='t' && message[2]=='a'){
 		// NLI: MQTT-triggered self-OTA. Body: ota&url=<http url>&pw=<md5>
 		// pw already verified by checkPassword(). Device pulls the .bin over
