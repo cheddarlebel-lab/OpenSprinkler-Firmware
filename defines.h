@@ -28,7 +28,7 @@
 
 // NLI Custom Firmware Extensions
 #define NLI_FIRMWARE
-#define NLI_FW_VERSION         14
+#define NLI_FW_VERSION         15
 #define NLI_CURRENT_PUBLISH_MS 5000  // publish board current every 5s during zone runs
 #define NLI_FLOW_PUBLISH_MS    5000  // publish live flow rate every 5s during zone runs
 #define NLI_IDLE_FLOW_PUBLISH_MS 60000 // when idle, publish flow only if pulses advanced (leak detection)

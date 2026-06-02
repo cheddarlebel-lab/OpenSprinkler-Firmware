@@ -81,6 +81,7 @@ extern char tmp_buffer[];
 #define MQTT_MAX_TOPIC_LEN	   24  // Maximum topic length
 #define MQTT_MAX_ID_LEN        16  // MQTT Client Id to uniquely reference this unit
 #define MQTT_RECONNECT_DELAY  120  // Minumum of 60 seconds between reconnect attempts
+#define MQTT_RESUBSCRIBE_INTERVAL 300  // Re-issue SUBSCRIBE every N seconds even on a live session (command-channel self-heal)
 
 #define MQTT_AVAILABILITY_TOPIC	"availability"
 #define MQTT_ONLINE_PAYLOAD  "online"
@@ -437,8 +438,11 @@ void OSMqtt::subscribe(void){
 		return;
 	}
 	DEBUG_LOGF("MQTT Subscribe: %s\r\n", _sub_topic);
-	_done_subscribed = true;
-	_subscribe();
+	// Only latch the subscribed flag if the SUBSCRIBE actually succeeded. The old
+	// code set it true unconditionally, so a failed subscribe left the device
+	// permanently "subscribed" in name only — deaf to commands until the next
+	// full disconnect. Leaving it false lets loop() retry on the next pass.
+	_done_subscribed = (_subscribe() == MQTT_SUCCESS);
 }
 
 // Regularly call the loop function to ensure "keep alive" messages are sent to the broker and to reconnect if needed.
@@ -453,6 +457,18 @@ void OSMqtt::loop(void) {
 		_done_subscribed = false;
 		_connect();
 		last_reconnect_attempt = millis();
+	}
+
+	// Defensive periodic re-subscribe. A broker can silently drop our /cmd
+	// subscription while the TCP session stays up (broker restart, session
+	// takeover by a same-id client, ACL refresh): _connected() keeps returning
+	// true, so the reconnect path above never fires and the device goes deaf to
+	// commands forever while telemetry keeps publishing. Re-issuing SUBSCRIBE on
+	// a live session is idempotent and cheap, so force a refresh on an interval.
+	static unsigned long last_subscribe_refresh = 0;
+	if (_connected() && (millis() - last_subscribe_refresh >= MQTT_RESUBSCRIBE_INTERVAL * 1000UL)) {
+		_done_subscribed = false;
+		last_subscribe_refresh = millis();
 	}
 
 	if(!_done_subscribed){
