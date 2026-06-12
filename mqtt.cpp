@@ -48,6 +48,7 @@
 #include "program.h"
 #include "types.h"
 #include "mqtt.h"
+#include "weather.h" // NLI: WEATHER_UPDATE_WL for co&wl over MQTT
 #include "ArduinoJson.hpp"
 
 // Debug routines to help identify any blocking of the event loop for an extended period
@@ -650,6 +651,19 @@ void subscribe_callback(char *topic, unsigned char *payload, unsigned int length
 			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("fpr1"), true)){
 				os.iopts[IOPT_PULSE_RATE_1] = (unsigned char)atoi(tmp_buffer);
 				changed = 1;
+			}
+			// NLI fw16: water level (% watering) over MQTT — mirrors weather.cpp
+			// scale handling; WEATHER_UPDATE_WL makes the device publish its
+			// weather update so the cloud reads the new level back (telemetry).
+			if(findKeyVal(message, tmp_buffer, TMP_BUFFER_SIZE, PSTR("wl"), true)){
+				int wlv = atoi(tmp_buffer);
+				if(wlv >= 0 && wlv <= 250){
+					if((unsigned char)wlv != os.iopts[IOPT_WATER_PERCENTAGE]){
+						os.iopts[IOPT_WATER_PERCENTAGE] = (unsigned char)wlv;
+						os.weather_update_flag |= WEATHER_UPDATE_WL;
+					}
+					changed = 1; // recognized even when unchanged → idempotent result:1
+				}
 			}
 			if(changed) {
 				os.iopts_save();
